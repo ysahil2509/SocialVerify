@@ -3,7 +3,26 @@ import 'dotenv/config';
 export const PORT: number = Number(process.env.PORT) || 9000;
 export const DATABASE_URL: string = (process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/postgres")
   .replace(/([?&])sslmode=(prefer|require|verify-ca)(?=&|$)/, "$1sslmode=verify-full");
-export const MICROSERVICE_BASE_URL: string = process.env.MICROSERVICE_BASE_URL || "http://localhost:8000";
+function resolveMicroserviceUrl(raw?: string): string {
+  if (!raw || !raw.trim()) {
+    return "https://socialverify-ai.onrender.com";
+  }
+  let url = raw.trim();
+  // Render internal service hostnames cannot receive traffic on free plan; map to public HTTPS URL
+  if (url === "socialverify-ai" || url === "socialverify-ai:8000") {
+    return "https://socialverify-ai.onrender.com";
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    if (url.includes(".onrender.com") || url.includes(".vercel.app")) {
+      url = `https://${url}`;
+    } else {
+      url = url.includes(":") ? `http://${url}` : `http://${url}:8000`;
+    }
+  }
+  return url.replace(/\/+$/, "");
+}
+
+export const MICROSERVICE_BASE_URL: string = resolveMicroserviceUrl(process.env.MICROSERVICE_BASE_URL);
 export const JWT_SECRET: string = process.env.JWT_SECRET || "secret";
 
 export const LOGS_DIRECTORY: string = "logs";

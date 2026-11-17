@@ -14,11 +14,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: MICROSERVICE_BASE_URL
-        fromService:
-          type: web
-          name: socialverify-ai
-          property: host
-          typeProperty: https
+        value: https://socialverify-ai.onrender.com
       - key: MASTODON_INSTANCES
         value: mastodon.social,mastodon.online,fosstodon.org,masto.ai,infosec.exchange
       - key: MASTODON_REQUEST_TIMEOUT
@@ -42,6 +38,8 @@ services:
         value: 8000
       - key: HOST
         value: 0.0.0.0
+      - key: SERVER_BASE_URL
+        value: https://socialverify-server.onrender.com
       - key: ALLOWED_ORIGINS
         value: "*"
       - key: CREWAI_MODEL
