@@ -110,8 +110,9 @@ export default function AuthPanel({
         redirect: false,
         callbackUrl: AUTH_CALLBACK_URL,
       });
-      if (!result?.ok || result.error) setError(copy.error);
-      else {
+      if (!result?.ok || result.error) {
+        setError(result?.error || copy.error);
+      } else {
         router.replace(AUTH_CALLBACK_URL);
         router.refresh();
       }

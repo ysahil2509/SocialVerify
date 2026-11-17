@@ -82,13 +82,15 @@ providers.push(
                     image: authData.user.imageUrl ?? undefined,
                     accessToken: authData.token,
                 };
-            } catch (error) {
+            } catch (error: any) {
+                const serverMsg = error?.response?.data?.message;
                 const message =
-                    error instanceof Error
+                    serverMsg ||
+                    (error instanceof Error
                         ? error.message
                         : isRegistering
                             ? "Unable to create your account. Please try again."
-                            : "Unable to sign in. Please check your credentials and try again.";
+                            : "Unable to sign in. Please check your credentials and try again.");
 
                 throw new Error(message);
             }
