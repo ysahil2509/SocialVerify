@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
-import { PORT } from './lib/config';
+import { PORT, DATABASE_URL } from './lib/config';
+import { runDatabaseMigrations } from './prisma/migrate';
 import logger from './middlewares/logger';
 import authenticate from './middlewares/authenticate';
 import authRouter from './routes/authRouter';
@@ -58,5 +59,6 @@ app.listen(PORT, (err) => {
         process.exit(1);
     } else {
         console.log(`Server is running on port -> ${PORT}`);
+        void runDatabaseMigrations(DATABASE_URL);
     }
 });

@@ -466,6 +466,10 @@ export default function ResearchStudio({
       : "";
 
   useEffect(() => {
+    workspace.warm();
+  }, []);
+
+  useEffect(() => {
     const controller = new AbortController();
     workspace
       .conversations(controller.signal)

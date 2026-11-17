@@ -42,7 +42,17 @@ const userProxy = {
     if (useLocalStore || !pgClient) {
       return localStore.userWhere(filter);
     }
-    const origBuilder = pgClient.orm.public.User.where(filter);
+    let origBuilder: any;
+    try {
+      origBuilder = pgClient.orm.public.User.where(filter);
+    } catch (err: any) {
+      if (shouldFallback(err)) {
+        useLocalStore = true;
+        console.warn('[SocialVerify DB] Falling back to embedded local store for User.where()');
+        return localStore.userWhere(filter);
+      }
+      throw err;
+    }
     return {
       first: async () => {
         try {
@@ -92,7 +102,17 @@ const conversationProxy = {
     if (useLocalStore || !pgClient) {
       return localStore.conversationWhere(filter);
     }
-    const origBuilder = pgClient.orm.public.Conversation.where(filter);
+    let origBuilder: any;
+    try {
+      origBuilder = pgClient.orm.public.Conversation.where(filter);
+    } catch (err: any) {
+      if (shouldFallback(err)) {
+        useLocalStore = true;
+        console.warn('[SocialVerify DB] Falling back to embedded local store for Conversation.where()');
+        return localStore.conversationWhere(filter);
+      }
+      throw err;
+    }
     return {
       include: (rel: string, fn: any) => {
         const withInc = origBuilder.include(rel, fn);
@@ -201,7 +221,17 @@ const chatProxy = {
     if (useLocalStore || !pgClient) {
       return localStore.chatWhere(filter);
     }
-    const origBuilder = pgClient.orm.public.Chat.where(filter);
+    let origBuilder: any;
+    try {
+      origBuilder = pgClient.orm.public.Chat.where(filter);
+    } catch (err: any) {
+      if (shouldFallback(err)) {
+        useLocalStore = true;
+        console.warn('[SocialVerify DB] Falling back to embedded local store for Chat.where()');
+        return localStore.chatWhere(filter);
+      }
+      throw err;
+    }
     return {
       orderBy: (sortFn: any) => {
         const withOrder = origBuilder.orderBy(sortFn);

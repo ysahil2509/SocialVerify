@@ -1,4 +1,13 @@
 import http from "./api";
+import { HTTP_SERVER_BASE_URL } from "./config";
+
+export function warmServices() {
+  if (typeof window === "undefined") return;
+  try {
+    fetch(`${HTTP_SERVER_BASE_URL}/health`, { mode: "no-cors" }).catch(() => {});
+    fetch("https://socialverify-ai.onrender.com/health", { mode: "no-cors" }).catch(() => {});
+  } catch {}
+}
 
 type Envelope<T> = { success: boolean; data: T; message?: string };
 export type Article = {
@@ -182,6 +191,7 @@ export const workspace = {
     http.delete(`/api/conversation/${encodeURIComponent(id)}`),
   monitoring: (signal?: AbortSignal) =>
     get<MonitoringData>("/api/monitoring", signal),
+  warm: warmServices,
 };
 
 export type MonitoringMetric = {

@@ -86,6 +86,10 @@ export default function IntelligenceDesk() {
   const refresh = () => setRevision((n) => n + 1);
 
   useEffect(() => {
+    workspace.warm();
+  }, []);
+
+  useEffect(() => {
     const controller = new AbortController();
     workspace
       .news(topic, controller.signal)
