@@ -1,0 +1,64 @@
+services:
+  # 1. SocialVerify Gateway Server (Express + Bun / Prisma / Auth)
+  - type: web
+    name: socialverify-server
+    runtime: docker
+    dockerfilePath: docker/Dockerfile.server
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 9000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MICROSERVICE_BASE_URL
+        fromService:
+          type: web
+          name: socialverify-ai
+          property: host
+          typeProperty: https
+      - key: MASTODON_INSTANCES
+        value: mastodon.social,mastodon.online,fosstodon.org,masto.ai,infosec.exchange
+      - key: MASTODON_REQUEST_TIMEOUT
+        value: 15
+      - key: DATABASE_URL
+        fromDatabase:
+          name: socialverify-db
+          property: connectionString
+
+  # 2. SocialVerify AI Service (Python FastAPI + CrewAI + ADK)
+  - type: web
+    name: socialverify-ai
+    runtime: docker
+    dockerfilePath: docker/Dockerfile.service
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: HOST
+        value: 0.0.0.0
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: CREWAI_MODEL
+        value: groq/llama-3.3-70b-versatile
+      - key: ADK_MODEL
+        value: gemini-3.5-flash
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: A2A_AUTH_TOKEN
+        generateValue: true
+
+databases:
+  # Managed PostgreSQL for User Auth & Chat History
+  - name: socialverify-db
+    plan: free
+    region: oregon
+    databaseName: socialverify
+    user: socialverify_user

@@ -11,8 +11,10 @@ type GoogleProfile = {
     picture?: string;
 };
 
-export const authOptions: NextAuthOptions = {
-    providers: [
+const providers: NextAuthOptions["providers"] = [];
+
+if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+    providers.push(
         GoogleProvider({
             clientId: GOOGLE_CLIENT_ID,
             clientSecret: GOOGLE_CLIENT_SECRET,
@@ -28,67 +30,74 @@ export const authOptions: NextAuthOptions = {
                 };
             },
             allowDangerousEmailAccountLinking: true
-        }),
-        CredentialsProvider({
-            name: "Credentials",
-            credentials: {
-                name: { label: "Name", type: "text" },
-                email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" },
-                register: { label: "Register", type: "text" },
-            },
-            async authorize(credentials) {
-                const name = credentials?.name?.trim();
-                const email = credentials?.email?.trim();
-                const password = credentials?.password;
-                const isRegistering = credentials?.register === "true";
-
-                if (!email || !password) {
-                    throw new Error("Email and password are required.");
-                }
-
-                if (isRegistering && !name) {
-                    throw new Error("Name is required to create an account.");
-                }
-
-                try {
-                    const response = isRegistering
-                        ? await httpClient.post("/api/auth/signup", {
-                              name,
-                              email,
-                              password,
-                          })
-                        : await httpClient.post("/api/auth/signin", {
-                              email,
-                              password,
-                          });
-
-                    const authData = response.data?.data;
-
-                    if (!authData?.user || !authData?.token) {
-                        throw new Error("Invalid authentication response from the server.");
-                    }
-
-                    return {
-                        id: authData.user.id,
-                        name: authData.user.name,
-                        email: authData.user.email,
-                        image: authData.user.imageUrl ?? undefined,
-                        accessToken: authData.token,
-                    };
-                } catch (error) {
-                    const message =
-                        error instanceof Error
-                            ? error.message
-                            : isRegistering
-                                ? "Unable to create your account. Please try again."
-                                : "Unable to sign in. Please check your credentials and try again.";
-
-                    throw new Error(message);
-                }
-            },
         })
-    ],
+    );
+}
+
+providers.push(
+    CredentialsProvider({
+        name: "Credentials",
+        credentials: {
+            name: { label: "Name", type: "text" },
+            email: { label: "Email", type: "email" },
+            password: { label: "Password", type: "password" },
+            register: { label: "Register", type: "text" },
+        },
+        async authorize(credentials) {
+            const name = credentials?.name?.trim();
+            const email = credentials?.email?.trim();
+            const password = credentials?.password;
+            const isRegistering = credentials?.register === "true";
+
+            if (!email || !password) {
+                throw new Error("Email and password are required.");
+            }
+
+            if (isRegistering && !name) {
+                throw new Error("Name is required to create an account.");
+            }
+
+            try {
+                const response = isRegistering
+                    ? await httpClient.post("/api/auth/signup", {
+                          name,
+                          email,
+                          password,
+                      })
+                    : await httpClient.post("/api/auth/signin", {
+                          email,
+                          password,
+                      });
+
+                const authData = response.data?.data;
+
+                if (!authData?.user || !authData?.token) {
+                    throw new Error("Invalid authentication response from the server.");
+                }
+
+                return {
+                    id: authData.user.id,
+                    name: authData.user.name,
+                    email: authData.user.email,
+                    image: authData.user.imageUrl ?? undefined,
+                    accessToken: authData.token,
+                };
+            } catch (error) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : isRegistering
+                            ? "Unable to create your account. Please try again."
+                            : "Unable to sign in. Please check your credentials and try again.";
+
+                throw new Error(message);
+            }
+        },
+    })
+);
+
+export const authOptions: NextAuthOptions = {
+    providers,
     callbacks: {
         async signIn({ user }) {
             if (!user?.email) return false;
