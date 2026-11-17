@@ -13,4 +13,4 @@ EXPOSE 9000
 
 # Build and start
 RUN bun run build
-CMD bun run db:update -- -y || true; bun run start
+CMD bun run start
