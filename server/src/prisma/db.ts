@@ -27,6 +27,10 @@ function shouldFallback(err: any): boolean {
     msg.includes("connection") ||
     msg.includes("marker") ||
     msg.includes("failed to connect") ||
+    msg.includes("does not exist") ||
+    msg.includes("relation") ||
+    msg.includes("table") ||
+    code.includes("42p01") ||
     code.includes("econnrefused") ||
     code.includes("contract.marker_read_failed") ||
     code.includes("sql_connection")

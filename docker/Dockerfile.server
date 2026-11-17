@@ -7,4 +7,4 @@ RUN bun install --frozen-lockfile || bun install
 COPY server/ ./
 EXPOSE 9000
 RUN bun run build
-CMD ["bun", "run", "start"]
+CMD bun run db:update -- -y || true; bun run start
