@@ -23,6 +23,32 @@ import { desk } from "./content";
 import { FeedState, Reveal } from "./Motion";
 import WorldWatch from "./WorldWatch";
 
+function cleanSnippet(desc: string | null | undefined, title: string): string | null {
+  if (!desc) return null;
+  const text = desc
+    .replace(/&(amp|lt|gt|quot|apos|#39|nbsp);/gi, (m) => {
+      const lower = m.toLowerCase();
+      if (lower === "&amp;") return "&";
+      if (lower === "&lt;") return "<";
+      if (lower === "&gt;") return ">";
+      if (lower === "&quot;") return '"';
+      if (lower === "&apos;" || lower === "&#39;") return "'";
+      if (lower === "&nbsp;") return " ";
+      return " ";
+    })
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!text) return null;
+  const normText = text.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normTitle = title.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!normText || normText === normTitle || normText.startsWith(normTitle) || normTitle.startsWith(normText)) {
+    return null;
+  }
+  return text;
+}
+
 type Feed<T> = { data: T[]; loading: boolean; error?: string };
 const initial = { data: [], loading: true };
 const copy = {
@@ -271,11 +297,14 @@ export default function IntelligenceDesk() {
                       <h3 className="mt-3 font-editorial text-2xl leading-tight tracking-tight">
                         {article.title}
                       </h3>
-                      {article.description && (
-                        <p className="mt-4 line-clamp-3 text-xs leading-6 text-muted">
-                          {article.description}
-                        </p>
-                      )}
+                      {(() => {
+                        const snippet = cleanSnippet(article.description, article.title);
+                        return snippet ? (
+                          <p className="mt-4 line-clamp-3 text-xs leading-6 text-muted">
+                            {snippet}
+                          </p>
+                        ) : null;
+                      })()}
                       <div className="mt-auto flex items-center justify-between gap-2 pt-6 text-[11px]">
                         <Link
                           href={safeUrl(article.url) ?? "#"}
