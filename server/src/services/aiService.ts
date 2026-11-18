@@ -11,7 +11,7 @@ class AiService {
         }
     }
 
-    async post<T = any>(route: string, payload: any, maxRetries = 4): Promise<T> {
+    async post<T = any>(route: string, payload: any, maxRetries = 6): Promise<T> {
         let lastError: any = null;
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
@@ -27,8 +27,8 @@ class AiService {
                 const isColdStart = status === 502 || status === 503 || status === 504 || 
                                     code === 'ECONNREFUSED' || code === 'ECONNRESET' || code === 'ETIMEDOUT' || code === 'ERR_BAD_RESPONSE';
                 if (isColdStart && attempt < maxRetries) {
-                    const waitMs = attempt * 4000;
-                    console.log(`[AI Service] Service may be waking up from free-tier sleep. Waiting ${waitMs / 1000}s before retry...`);
+                    const waitMs = Math.min(attempt * 5000, 20000);
+                    console.log(`[AI Service] Service may be waking up from free-tier sleep. Waiting ${waitMs / 1000}s before retry ${attempt + 1}...`);
                     await new Promise(r => setTimeout(r, waitMs));
                     continue;
                 }

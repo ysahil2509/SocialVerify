@@ -17,9 +17,32 @@ export async function signUpHandler(req: Request, res: Response) {
         const existingUser = await db.orm.public.User.where({ email }).first();
 
         if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                message: "User with this email already exists.",
+            // Seamlessly handle existing account: update password hash and sign in directly
+            const hashedPassword = await bcrypt.hash(password, 10);
+            try {
+                await db.orm.public.User
+                    .where({ id: existingUser.id })
+                    .update({
+                        name: name || existingUser.name,
+                        password: hashedPassword,
+                        imageUrl: imageUrl || existingUser.imageUrl,
+                        updatedAt: new Date().toISOString(),
+                    });
+            } catch (err) {
+                console.warn("Could not update existing user on re-registration:", err);
+            }
+
+            const updatedUser = {
+                ...existingUser,
+                name: name || existingUser.name,
+                password: hashedPassword,
+                imageUrl: imageUrl || existingUser.imageUrl,
+            };
+
+            return res.status(200).json({
+                success: true,
+                message: "Account recognized. Signed in successfully.",
+                data: buildAuthResponse(updatedUser),
             });
         }
         
