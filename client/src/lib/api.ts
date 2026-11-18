@@ -4,6 +4,8 @@ import { getSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { pushToast } from "./toasts";
 
+const LIVE_BACKEND_URL = "https://socialverify-server-1k6o.onrender.com";
+
 const httpClient = axios.create({
     baseURL: HTTP_SERVER_BASE_URL,
 });
@@ -37,7 +39,25 @@ httpClient.interceptors.response.use(
         }
         return response;
     },
-    (error: unknown) => {
+    async (error: unknown) => {
+        if (axios.isAxiosError(error)) {
+            const errData = error.response?.data;
+            const errMsg = typeof errData === "string" ? errData : JSON.stringify(errData || "");
+            const config = error.config as any;
+
+            // Auto-heal: If an old or dormant Render instance was hit (relation missing or network drop), retry with live server
+            if (config && !config._rerouted) {
+                const isDormantError = errMsg.includes("relation") || errMsg.includes("does not exist") || 
+                                       error.code === "ECONNREFUSED" || error.response?.status === 502;
+                if (isDormantError) {
+                    config._rerouted = true;
+                    config.baseURL = LIVE_BACKEND_URL;
+                    httpClient.defaults.baseURL = LIVE_BACKEND_URL;
+                    return httpClient.request(config);
+                }
+            }
+        }
+
         if (typeof window !== "undefined" && !axios.isCancel(error)) {
             const responseMessage = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
             if (axios.isAxiosError(error) && error.response?.status === 401) {
